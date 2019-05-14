@@ -1,40 +1,46 @@
-#include <iostream>
-#include <cmath>
-#include <cstdlib>
-#include <vector>
-#include <array>
 #include <fstream>
+#include <vector>
+#include <iterator>
 #include <string>
-using namespace std;
+#include <algorithm>
+#include <map>
+#include <iostream>
+#include <dirent.h>
+#include "prep.h"
+#include "reader.h"
+#include "dept.h"
+#include <string.h>
+#include "dept.h"
+#include <iomanip>
+#include "grade.h"
+#include <array>
+#include <random>
+#include <cstdlib>
+#include <ctime>
+
+const std::string path_to_dir = "/Users/alexander/My_pandas/";
+const std::string path_to_rawdata = "departments_2/";
+const std::string path_to_preps = "data_hashed.csv";
+
+std::map<std::string, std::vector<Lesson>> find_all_places(Grade, int);
+Lesson find_free_spot_for_lesson(Group, std::string, std::map<std::string, std::vector<Lesson>>);
 
 class annealing {
 private:
     float temperature;
-    vector<vector<int> > data;
-    array<int, 2> shape;
+    Grade grade;
+    int group;
     double old_energy;
     double new_energy;
     unsigned int step_num;
     double threshold;
+    std::map<std::string, std::vector<Lesson>> possible_places;
+    std::vector<std::string> lesson_map_without_none;
 public:
-    annealing() {
-        temperature = 0;
-        threshold = 1;
-        step_num = 0;
-        shape[0] = 0;
-        shape[1] = 0;
-    }
-    annealing(float init_temp, vector<vector<int> >in_data): temperature(init_temp) {
-        shape[0] = in_data.size();
-        shape[1] = in_data[0].size();
-        threshold = 1;
-        step_num = 0;
-        for (int i = 0; i < shape[0]; i++) {
-            data.push_back(vector<int>(shape[1]));
-            for (int j = 0; j < shape[1]; j++) {
-                data[i][j] = in_data[i][j];
-            }
-        }
+    annealing(): temperature(0), step_num(0), threshold(1) {}
+    annealing(Grade new_grade, float init_temp): temperature(init_temp), step_num(0), threshold(1) {
+        grade.group_map = new_grade.group_map;
+        grade.gradeNumber = new_grade.gradeNumber;
     }
 
     void decrease_temp() {
@@ -49,40 +55,47 @@ public:
 
     double count_energy() {
         double total_energy = 0;
-        for (int i = 0; i < shape[0] - 1; i++) {
-            total_energy += sqrt((data[i+1][0] - data[i][0])*(data[i+1][0] - data[i][0]) + (data[i+1][1] - data[i][1])*(data[i+1][1] - data[i][1]));
-        }
+        // TODO
         return total_energy;
     }
 
-    double reverse(int i, int j) {
-        vector<int> temp = data[i];
-        data[i] = data[j];
-        data[j] = temp;
-    }
+    void run(int in_group) {
+        group = in_group;
+        possible_places = find_all_places(grade, group);
+        std::cout << "Possible places found" << std::endl;
 
-    void optimize() {
-        while(temperature > 0) {
+        for (auto x: grade.group_map[group].lesson_map) {
+            if(x.subject != "")
+                lesson_map_without_none.push_back(x.subject);
+        }
+        auto rng = std::default_random_engine {};
+        std::shuffle(std::begin(lesson_map_without_none), std::end(lesson_map_without_none), rng); //shuffle lessons
+
+        std::cout << "All lessons: " << std::endl;
+        for (auto lesson: lesson_map_without_none)
+            std::cout<<lesson << std::endl;
+
+        std::cout << "Going to generate" << std::endl;
+        generate_for_group();
+        /*while(temperature > 0) {
             step();
             if (step_num % 10000 == 0) {
                 print();
             }
-        }
+        }*/
     }
 
-    void step() {
+    /*void step() {
         step_num += 1;
         if (step_num == 1) {
             old_energy = count_energy();
             decrease_temp();
             return;
         }
-        int i = rand() % shape[0];
-        int j = rand() % shape[0];
+
         //cout << "----------------------------------------------------------------------" << endl;
         //cout << "i: " << i << ", j: " << j << endl;
         //cout << "----------------------------------------------------------------------" << endl;
-        reverse(i, j);
         new_energy = count_energy();
         if (new_energy > old_energy) {
             threshold = exp(-1.0 * (new_energy - old_energy) / temperature);
@@ -98,48 +111,142 @@ public:
         else
             old_energy = new_energy;
         decrease_temp();
-    }
+    }*/
 
     void print() {
-        cout << "STEP: " << step_num <<" ENERGY: " << old_energy << " TEMPERATURE: " << temperature << "PROBA: " << threshold << endl;
+        std::cout << "STEP: " << step_num <<" ENERGY: " << old_energy << " TEMPERATURE: " << temperature << "PROBA: " << threshold << std::endl;
     }
 
-    void print_data() {
-        cout << "----------------------------------------------------------------------" << endl;
-        for (int i = 0; i < shape[0]; i++) {
-            for (int j = 0; j<shape[1]; j++) {
-                cout << data[i][j] << " ";
-            }
-            cout << endl;
-        }
-        cout << "----------------------------------------------------------------------" << endl;
-    }
-
-    void write_data_to_csv(string filename) {
-        ofstream myfile;
-        myfile.open(filename);
-        for (int i = 0; i < shape[0]; i++) {
-            for (int j = 0; j < shape[1] - 1; j++) {
-                myfile << data[i][j] << ";";
-            }
-            myfile << data[i][shape[1] - 1] << "\n";
-        }
-    }
+    void generate_for_group();
 };
 
+void annealing::generate_for_group() {
+    srand(time(0));
+    int i = rand() % lesson_map_without_none.size();
+    int j = rand() % lesson_map_without_none.size();
 
-int main() {
-    vector<vector<int> > A;
-    int shape [2] = {500, 2};
-    for (int i = 0; i < shape[0]; i++) {
-        A.push_back(vector<int>());
-        for (int j = 0; j < shape[1]; j++) {
-            A[i].push_back(rand() % 100);
-        }
+    std::cout << "I J: " << i << " " << j << std::endl;
+
+
+    std::string temp = lesson_map_without_none[i];
+    lesson_map_without_none[i] = lesson_map_without_none[j];
+    lesson_map_without_none[j] = temp;
+
+
+    /*
+    auto rng = std::default_random_engine {};
+    std::shuffle(std::begin(lesson_map_without_none), std::end(lesson_map_without_none), rng); //shuffle lessons
+    */
+
+    //START FILLING TIMETABLE
+    Group new_group;
+
+}
+
+
+
+int main()
+{
+    DataFrame preps(",");
+    std::unordered_map <std::string, Professor> preps_map;
+
+    std::cout << "Loading preps ..." << std::endl;
+    preps.read_csv(path_to_dir + path_to_preps);
+    std::cout << preps.data.size() << std::endl;
+
+       // std::cout << "avg_score: " << avg_score << std::endl;
+
+        //load preps(check data_hashed)
+    for (size_t i = 0; i< preps.data.size(); i++) {
+
+        std::string hash = preps.data[i][9];
+        preps_map[hash] = Professor(preps.data[i]);
+
     }
-    annealing toy(60, A);
-    toy.write_data_to_csv("start.csv");
-    toy.optimize();
-    toy.write_data_to_csv("finish.csv");
+
+    Grade new_grade(path_to_dir, path_to_rawdata, preps_map);
+
+    std::map<std::string, std::vector<Lesson>> possible_places = find_all_places(new_grade, 7);
+    /*for (auto it = new_grade.group_map[0].lesson_set.begin(); it != new_grade.group_map[0].lesson_set.end(); ++it) {
+        std::cout<<*it<<std::endl;
+    }*/
+//    std::cout<<possible_places.begin()->first << std::endl;
+//    std::cout<<"wtf"<<std::endl;
+    //std::cout << possible_places.begin()++->second[0];
+    for(const auto & it: possible_places) {
+        std::cout<<"≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈"<<it.first << "≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈"<<std::endl << std::endl;
+        for(const auto itt: it.second) {
+            std::cout<<itt.subject << "   " << itt.lesson_id / 7 <<  "   " << itt.time << "   " << itt.professor << std::endl;
+        }
+        std::cout<<std::endl<<std::endl;
+    }
+
+    annealing optimizer(new_grade, 10);
+
+    optimizer.run(7);
+
     return 0;
 }
+
+// FIND ALL POSSIBLE PLACES FOR ALL LESSONS
+std::map<std::string, std::vector<Lesson>> find_all_places(Grade grade, int group_id) {
+    std::map<std::string, std::vector<Lesson>> return_map;
+    for(auto it=grade.group_map[group_id].lesson_set.begin(); it != grade.group_map[group_id].lesson_set.end(); ++it) {
+        if (*it == "")
+            continue;
+        //all subjects of current group
+        std::vector<Lesson> current;
+        for(auto group: grade.group_map) {
+            //all groups in grade
+            for(auto lesson: group.lesson_map) {
+                if(lesson.subject == *it) {
+                    bool flag = true;
+                    for (auto in_subjects: current) {
+                        if((lesson.time == in_subjects.time) && (lesson.professor == in_subjects.professor))
+                            flag = false;
+                    }
+                    if (flag == true)
+                        current.push_back(lesson);
+                }
+            }
+
+
+        }
+        return_map.insert(std::pair<std::string, std::vector<Lesson>>(*it, current));
+    }
+    return return_map;
+}
+
+
+
+//FIND A FREE SPOT FOR A LESSON
+Lesson find_free_spot_for_lesson(Group group, std::string lesson_name, std::map<std::string, std::vector<Lesson>> possible_places) {
+    //BUSY IDS
+    std::vector<int> busy_ids;
+    for (auto lesson:group.lesson_map) {
+        if (lesson.subject != "")
+            busy_ids.push_back(lesson.lesson_id);
+    }
+
+    for(const auto & it: possible_places) {
+        if(it.first == lesson_name) {
+            std::vector<Lesson> all_lessons_with_this_name = it.second;
+            auto rng = std::default_random_engine {};
+            std::shuffle(std::begin(all_lessons_with_this_name), std::end(all_lessons_with_this_name), rng); //shuffle lessons
+            for (auto lesson:all_lessons_with_this_name) {
+                bool flag = true;
+                for (auto id: busy_ids) {
+                    if (lesson.lesson_id == id)
+                        flag = false;
+                }
+                if (flag == true)
+                    return lesson;
+            }
+
+        }
+
+    }
+    return Lesson();
+}
+
+
