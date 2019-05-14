@@ -39,6 +39,8 @@ private:
 public:
     annealing(): temperature(0), step_num(0), threshold(1) {}
     annealing(Grade new_grade, float init_temp): temperature(init_temp), step_num(0), threshold(1) {
+        auto rng = std::default_random_engine {};
+        std::cout << typeid (rng).name();
         grade.group_map = new_grade.group_map;
         grade.gradeNumber = new_grade.gradeNumber;
     }
@@ -76,7 +78,12 @@ public:
             std::cout<<lesson << std::endl;
 
         std::cout << "Going to generate" << std::endl;
-        generate_for_group();
+        Group tempgroup = generate_group();
+
+        tempgroup.print();
+        std::cout << std::endl << std::endl << std::endl;
+        tempgroup = generate_group();
+        tempgroup.print();
         /*while(temperature > 0) {
             step();
             if (step_num % 10000 == 0) {
@@ -117,10 +124,10 @@ public:
         std::cout << "STEP: " << step_num <<" ENERGY: " << old_energy << " TEMPERATURE: " << temperature << "PROBA: " << threshold << std::endl;
     }
 
-    void generate_for_group();
+    Group generate_group();
 };
 
-void annealing::generate_for_group() {
+Group annealing::generate_group() {
     srand(time(0));
     int i = rand() % lesson_map_without_none.size();
     int j = rand() % lesson_map_without_none.size();
@@ -140,7 +147,17 @@ void annealing::generate_for_group() {
 
     //START FILLING TIMETABLE
     Group new_group;
-
+    Lesson new_lesson;
+    for(auto lesson: lesson_map_without_none) {
+        new_lesson = find_free_spot_for_lesson(new_group, lesson, possible_places);
+        if (new_lesson.subject != "") {
+            new_group.lesson_map.push_back(new_lesson);
+        }
+        else {
+            return Group();
+        }
+    }
+    return new_group;
 }
 
 
@@ -230,8 +247,8 @@ Lesson find_free_spot_for_lesson(Group group, std::string lesson_name, std::map<
 
     for(const auto & it: possible_places) {
         if(it.first == lesson_name) {
-            std::vector<Lesson> all_lessons_with_this_name = it.second;
             auto rng = std::default_random_engine {};
+            std::vector<Lesson> all_lessons_with_this_name = it.second;
             std::shuffle(std::begin(all_lessons_with_this_name), std::end(all_lessons_with_this_name), rng); //shuffle lessons
             for (auto lesson:all_lessons_with_this_name) {
                 bool flag = true;
@@ -239,8 +256,12 @@ Lesson find_free_spot_for_lesson(Group group, std::string lesson_name, std::map<
                     if (lesson.lesson_id == id)
                         flag = false;
                 }
-                if (flag == true)
+                if (flag == true) {
+                    //std::cout<<lesson_name << std::endl;
+                    //lesson.print();
+                    //std::cout<<lesson.lesson_id<<std::endl;
                     return lesson;
+                }
             }
 
         }

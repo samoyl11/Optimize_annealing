@@ -106,13 +106,16 @@ void Group::print(int day_id) {
 
     std::cout << "group_id:" << groupNumber << std::endl;
 
-    for (size_t i = 0; i < lesson_map.size(); i++) {
-        if(i%7 == 0) {
-            std::cout <<"day: " << i/6 << std::endl;
-        }
-        std::cout << "id: " << i << " ";
-        lesson_map[i].print();
+    for (int i = 0; i < 42; i++) {
+        if(i % 7 == 0)
+            std::cout << "Day: " << i / 7 << std::endl
+                         ;
+        for (auto lesson: lesson_map) {
+            if(lesson.lesson_id == i) {
+                lesson.print();
+            }
 
+        }
     }
 
 }
