@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <random>
 #include <set>
+#include <cstring>
 #include <ctime>
 #include "day.h"
 
@@ -53,7 +54,7 @@ public:
     //double score(DataFrame preps);
     void swapLessons(Lesson lesson1, Lesson lesson2);
     int getLessonsNumber();
-
+    void to_csv(std::string);
 };
 
 //void Group::swapLessons(Lesson lesson1, Lesson lesson2) {
@@ -120,6 +121,18 @@ void Group::print(int day_id) {
 
 }
 
-
+void Group::to_csv(std::string filename) {
+    std::ofstream outfile;
+    outfile.open(filename);
+    for (auto lesson: lesson_map) {
+        outfile << (lesson.lesson_id / 7) + 1 << ";" << lesson.subject << ";";
+        if (lesson.professor != "")
+            outfile << lesson.professor<<";" << lesson.room << ";"<< lesson.time << std::endl;
+        else {
+            outfile << ";" << lesson.room << ";"<< lesson.time << std::endl;
+        }
+    }
+    outfile.close();
+}
 
 #endif //READER_GROUP_H

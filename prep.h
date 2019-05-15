@@ -20,11 +20,11 @@ public:
     std::string surname;
     std::string middle_name;
     std::string link;
-    int knowledge;
-    int skill;
-    int social;
-    int loyality;
-    int total;
+    double knowledge;
+    double skill;
+    double social;
+    double loyality;
+    double total;
 
     Professor(int prep_id = 1, std::string name = "", std::string surname = "", std::string middle_name = "",
         std::string link= "",

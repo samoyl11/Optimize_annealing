@@ -27,7 +27,7 @@ public:
     int gradeNumber;
 
     //std::map<std::string, Department> departments;
-    std::vector<Group> group_map;
+    std::map<std::string, Group> group_map;
 
     Grade(int gradeNumber = 0) :
             gradeNumber(gradeNumber)
@@ -75,7 +75,7 @@ public:
            // deptNumber = dep_number;
             for(size_t i = 0; i < df.header.size(); i++){
                 //std::cout << df.header[i] << ":\n";
-                group_map.push_back(Group(df.header[i], df.data[i], preps_map));
+                group_map[df.header[i]] = Group(df.header[i], df.data[i], preps_map);
             }
 
             //departments[dep_number] = new_dep;
@@ -85,12 +85,12 @@ public:
     }
 
 
-   void print(int group_id = 0, int day_id = default_day);
+   void print(std::string group_id = "778", int day_id = default_day);
 
 };
 //
-void Grade::print(int group_id, int day_id) {
-
+void Grade::print(std::string group_id, int day_id) {
+    std::cout << "KEK" << std::endl;
     //print a group
     std::cout << "~~~~~~~~~~~~~~~~~~~~~~~~~~ Printing ~~~~~~~~~~~~~~~~~~~~~~~~~~" << std::endl;
 //    if (dep_id != "") {

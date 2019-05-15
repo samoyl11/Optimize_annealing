@@ -58,9 +58,13 @@ public:
             professor = raw_data[1];
             room = raw_data[2];
             time = time_splits[i%7];
-            if((subject == "Компьютерные технологии") || (subject == "Общая физика: лаб.практикум") || (subject == "Доп. главы дискретного анализа")  ) {
+            if((subject == "Компьютерные технологии") || (subject == "Общая физика: лаб.практикум") || (subject == "Доп. главы дискретного анализа") || (subject== "Современные проблемы прикладной математики") ) {
                 doubled = true;
             }
+            else {
+                doubled = false;
+            }
+
             if ((subject == "Доп. главы дискретного анализа") || ((subject == "Дифференциальные уравнения"))
             || (subject == "Гармонический анализ") || (subject == "Мера и интеграл Лебега") || (subject == "Ин.яз.") || (subject == "Современные проблемы прикладной математики")) {
                moveable = false;
@@ -110,9 +114,11 @@ void Lesson::print() {
             prep_list[i].print();
         }
         std::cout << "time: " << time << " ";
+        std::cout << "exist: " << exist << " ";
     }
     else {
         std::cout << "none " ;
+        std::cout << "exist: " << exist << " ";
     }
     std::cout<<std::endl;
 
