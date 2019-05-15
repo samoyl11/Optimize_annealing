@@ -8,9 +8,7 @@
 #include <dirent.h>
 #include "prep.h"
 #include "reader.h"
-#include "dept.h"
 #include <string.h>
-#include "dept.h"
 #include <iomanip>
 #include "grade.h"
 #include <array>

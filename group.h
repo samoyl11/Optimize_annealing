@@ -125,7 +125,10 @@ void Group::to_csv(std::string filename) {
     std::ofstream outfile;
     outfile.open(filename);
     for (auto lesson: lesson_map) {
-        outfile << (lesson.lesson_id / 7) + 1 << ";" << lesson.subject << ";";
+        if (lesson.subject != "")
+            outfile << (lesson.lesson_id / 7) + 1 << ";" << lesson.subject << ";";
+        else
+            outfile << (lesson.lesson_id / 7) + 1 << ";" << " " << ";";
         if (lesson.professor != "")
             outfile << lesson.professor<<";" << lesson.room << ";"<< lesson.time << std::endl;
         else {
