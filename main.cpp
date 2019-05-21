@@ -30,6 +30,7 @@ double number_of_windows(Group);
 double ratings(Group, double, double, double, double, double);
 double except_days(Group, int);
 double time_of_study(Group, int, int, int, int);
+double exeption_of_pairs(Group, std::string);
 
 class annealing {
 private:
@@ -38,7 +39,7 @@ private:
     Grade grade;
     Group current_group;
     Group new_group;
-    std::string group;
+    std::string group, pair_id;
     double old_energy;
     double new_energy;
     unsigned int step_num;
@@ -52,10 +53,10 @@ public:
     }
     annealing(Grade new_grade, float init_temp, double number_of_windows_weight=1, double ratings_knowledge=0, double ratings_skill=0, double ratings_social=0,
               double ratings_loyality=0, double ratings_total=0,int exept_days_int=5, double exept_days_weight=100, int which1=0, int which2=0, int days1=0,
-              int days2=0, double weight_time_of_study=0): temperature(init_temp), step_num(0), threshold(1), number_of_windows_weight(number_of_windows_weight),
+              int days2=0, double weight_time_of_study=0, std::string pair_id=""): temperature(init_temp), step_num(0), threshold(1), number_of_windows_weight(number_of_windows_weight),
               ratings_knowledge(ratings_knowledge), ratings_skill(ratings_skill), ratings_social(ratings_social), ratings_loyality(ratings_loyality),
               ratings_total(ratings_total), exept_days_weight(exept_days_weight), weight_time_of_study(weight_time_of_study), exept_days_int(exept_days_int),
-              which1(which1), which2(which2), days1(days1), days2(days2)
+              which1(which1), which2(which2), days1(days1), days2(days2), pair_id(pair_id)
     {
         grade.group_map = new_grade.group_map;
         grade.gradeNumber = new_grade.gradeNumber;
@@ -84,7 +85,7 @@ public:
         loss += number_of_windows_weight * number_of_windows(tempgroup)
                 + ratings(tempgroup, ratings_knowledge,  ratings_skill,  ratings_social,  ratings_loyality,  ratings_total)
                 + exept_days_weight * except_days(tempgroup, exept_days_int)
-                + weight_time_of_study * time_of_study(tempgroup, which1, which2, days1, days2);
+                + weight_time_of_study * time_of_study(tempgroup, which1, which2, days1, days2) + exeption_of_pairs(tempgroup, pair_id);
         //std::cout << loss << std::endl;
         return loss;
     }
@@ -155,12 +156,12 @@ public:
                 threshold = exp(-1.0 * (new_energy - old_energy) / temperature);
                 float p = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
                 //std::cout << "THRESHOLD : " << threshold << " P: " << p << std::endl;
-                //cout << endl << "new energy > old energy, probability: " << p << endl;
+                //cout <<std::endl << "new energy > old energy, probability: " << p <<std::endl;
                 if (p < threshold) {
                     //std::cout << "HERE" << std::endl;
                     current_group = new_group;
                     old_energy = new_energy;
-                    //cout << "p = " << p << ", threshold = " << threshold << endl;
+                    //cout << "p = " << p << ", threshold = " << threshold <<std::endl;
                 }
             }
             else {
@@ -296,7 +297,7 @@ int main(int agrc, char ** argv)
     }*/
 
     annealing optimizer(new_grade, 150, std::stod(argv[3]), std::stod(argv[4]), std::stod(argv[5]), std::stod(argv[6]), std::stod(argv[7]), std::stod(argv[8]),
-            std::stoi(argv[9]), 0.01, std::stoi(argv[10]), std::stoi(argv[11]), std::stoi(argv[12]), std::stoi(argv[13]), std::stod(argv[14]));
+            std::stoi(argv[9]), 0.01, std::stoi(argv[10]), std::stoi(argv[11]), std::stoi(argv[12]), std::stoi(argv[13]), std::stod(argv[14]), argv[15]);
 
     optimizer.run(group);
     //std::cout << optimizer.loss(new_grade.group_map["777"]) << std::endl;
@@ -427,7 +428,7 @@ double number_of_windows(Group tempgroup) {
             }
         }
         total[i] = last[i] - first[i] + 1;
-        //cout << first[i] << ";" << last[i] << endl;
+        //cout << first[i] << ";" << last[i] <<std::endl;
 
         s = 0;
         t = 0;
@@ -438,7 +439,7 @@ double number_of_windows(Group tempgroup) {
         for (int j = 7 * i; j < 7 * i + 7; j++) { // номер пары в этот день
             if(tempgroup.lesson_map[j].subject == "" && j >= first[i]  + 7 * i && j < last[j] + 7 * i){ //то есть что если индекс лежит между последней и первой парой в этот день
                 windows[i]++;
-                cout << i << "===" << first[i]  + 7 * i << "====" << last[j] + 7 * i << endl;
+               std::cout << i << "===" << first[i]  + 7 * i << "====" << last[j] + 7 * i <<std::endl;
             }
         }
     }*/
@@ -447,7 +448,7 @@ double number_of_windows(Group tempgroup) {
         if((tempgroup.lesson_map[j].subject == "") && (7 * t + first[t] < j) && (7 * t + last[t] > j)){ //то есть что если индекс лежит между последней и первой парой в этот день
             windows[t]++;
         }
-        //cout<< "номер первой пары =" << 7 * t + first[t] << ";    номер последней пары =" << 7 * t + last [t]<< ";    " << j  << "кол-во окон равно:" << windows[t] << endl;
+        //cout<< "номер первой пары =" << 7 * t + first[t] << ";    номер последней пары =" << 7 * t + last [t]<< ";    " << j  << "кол-во окон равно:" << windows[t] <<std::endl;
     }
 
     int sum_win = 0;
@@ -461,7 +462,7 @@ double number_of_windows(Group tempgroup) {
         sum_win += windows[i];
 
     }
-    //cout << sum_tot << ";   " << sum_win << endl;
+    //cout << sum_tot << ";   " << sum_win <<std::endl;
     //cout << (double)sum_win/(double)sum_tot;
     return (double)sum_win/(double)sum_tot;
 
@@ -492,7 +493,7 @@ double ratings(Group tempgroup, double ratings_knowledge, double ratings_skill, 
                       // tempgroup.lesson_map[i].prep_list[0].social << "  " <<
                       //          tempgroup.lesson_map[i].prep_list[0].loyality << "   "
                         //           << tempgroup.lesson_map[i].prep_list[0].knowledge << "   "
-                         //          << tempgroup.lesson_map[i].prep_list[0].total << endl;
+                         //          << tempgroup.lesson_map[i].prep_list[0].total <<std::endl;
             }
         }
     }
@@ -502,36 +503,36 @@ double ratings(Group tempgroup, double ratings_knowledge, double ratings_skill, 
 }
 
 double except_days(Group tempgroup, int input){
-    //cout << input << endl;
+    //cout << input <<std::endl;
     double output = 0;
     int s6 = input % 10;
     input = input / 10;
-    //cout << s6 << "  " <<  input << endl;
+    //cout << s6 << "  " <<  input <<std::endl;
     int s5 = input % 10;
     input = input / 10;
-    //cout << s5 << "  " << input << endl;
+    //cout << s5 << "  " << input <<std::endl;
 
     int s4 = input % 10;
     input = input / 10;
-    //cout << s4 << "  " << input << endl;
+    //cout << s4 << "  " << input <<std::endl;
 
     int s3 = input % 10;
     input = input / 10;
-    //cout <<  s3 << "  " << input << endl;
+    //cout <<  s3 << "  " << input <<std::endl;
 
     int s2 = input % 10;
     input = input / 10;
-    //cout << s2 << "  "  << input << endl;
+    //cout << s2 << "  "  << input <<std::endl;
 
     int s1 = input % 10;
-    //cout << "s1 = " << s1 << " input =    " <<  input << endl;
+    //cout << "s1 = " << s1 << " input =    " <<  input <<std::endl;
     //tempgroup.print();
     for (int i = 0; i < 42; i++) {
         //std::cout << tempgroup.lesson_map[i].exist << std::endl;
         if(tempgroup.lesson_map[i].exist == 1){
             //std::cout << i / 7 + 1 << "  " << s1 << s2 << s3 << s4 << s5 << s6  << std::endl;
             if((i / 7 + 1 == s1 or i / 7 + 1 == s2  or i / 7 + 1 == s3  or i / 7 + 1 == s4 or i / 7 + 1 == s5 or i / 7 + 1 == s6)){
-                //\cout << i << endl;
+                //\cout << i <<std::endl;
                 output += 100;
             }
         }
@@ -573,29 +574,29 @@ double time_of_study(Group tempgroup, int which1, int which2, int input1, int in
             }
         }
         total[i] = last[i] - first[i] + 1;
-        //cout << first[i] << "  " << last[i] << "  " << total[i] <<  endl;
+        //cout << first[i] << "  " << last[i] << "  " << total[i] << std::endl;
         s = 0;
         t = 0;
     }
 
     int s6 = input1 % 10;
     input1 = input1 / 10;
-    //cout << s6 << "  " <<  input << endl;
+    //cout << s6 << "  " <<  input <<std::endl;
     int s5 = input1 % 10;
     input1 = input1 / 10;
-    //cout << s5 << "  " << input << endl;
+    //cout << s5 << "  " << input <<std::endl;
 
     int s4 = input1 % 10;
     input1 = input1 / 10;
-    //cout << s4 << "  " << input << endl;
+    //cout << s4 << "  " << input <<std::endl;
 
     int s3 = input1 % 10;
     input1 = input1 / 10;
-    //cout <<  s3 << "  " << input << endl;
+    //cout <<  s3 << "  " << input <<std::endl;
 
     int s2 = input1 % 10;
     input1 = input1 / 10;
-    //cout << s2 << "  "  << input << endl;
+    //cout << s2 << "  "  << input <<std::endl;
 
     int s1 = input1 % 10;
     //cout << "s1 = " << s1 << " inpu
@@ -604,7 +605,7 @@ double time_of_study(Group tempgroup, int which1, int which2, int input1, int in
         for(int i = 0; i < 6; i++){
             if((i + 1 == s1 or i + 1 == s2  or i + 1 == s3  or i + 1 == s4 or i + 1 == s5 or i + 1 == s6) && first[i] != 7){
                 //cout << "   " << i << "   "<< first[i] << "o   " << output;
-                //cout << first[i] << endl;
+                //cout << first[i] <<std::endl;
                 output += (double)first[i]/7;
                 //cout << (double)first[i]/7;
             }
@@ -621,22 +622,22 @@ double time_of_study(Group tempgroup, int which1, int which2, int input1, int in
 
     int t6 = input2 % 10;
     input2 = input2 / 10;
-    //cout << s6 << "  " <<  input << endl;
+    //cout << s6 << "  " <<  input <<std::endl;
     int t5 = input2 % 10;
     input2 = input2 / 10;
-    //cout << s5 << "  " << input << endl;
+    //cout << s5 << "  " << input <<std::endl;
 
     int t4 = input2 % 10;
     input2 = input2 / 10;
-    //cout << s4 << "  " << input << endl;
+    //cout << s4 << "  " << input <<std::endl;
 
     int t3 = input2 % 10;
     input2 = input2 / 10;
-    //cout <<  s3 << "  " << input << endl;
+    //cout <<  s3 << "  " << input <<std::endl;
 
     int t2 = input2 % 10;
     input2 = input2 / 10;
-    //cout << s2 << "  "  << input << endl;
+    //cout << s2 << "  "  << input <<std::endl;
 
     int t1 = input2 % 10;
     //cout << "s1 = " << s1 << " inpu
@@ -658,6 +659,42 @@ double time_of_study(Group tempgroup, int which1, int which2, int input1, int in
 
     return output;
     //здесь у нас уже есть массив с количеством пар по дням, а также с тем, когда пары начинаются
+}
+
+double exeption_of_pairs(Group tempgroup, std::string pair_id){
+    double loss = 0;
+    std::cout << "string:  " << pair_id <<std::endl;
+    //const char *s_numbers = "1343245";
+    size_t len = pair_id.size();
+   std::cout << "len =   " << len <<std::endl;
+    int days[len/2];
+    int pairs[len/2];
+    int s = 0;
+    for(size_t i = 0; i < len; i += 2){
+        days[s] = pair_id[i] - 48;
+        pairs[s] = pair_id[i + 1] - 48;
+       std::cout << "  days:   "<< days[s] << "    pairs:  " << pairs[s]  << "    " << 7 * days[s] + pairs[s] <<std::endl;
+        s++;
+    }
+    int exepts[len/2];
+    for(size_t i = 0; i < len/2; i++){
+        exepts[i] = 7 * days[i] + pairs[i];
+       std::cout << "  days:   "<< days[i] << "    pairs:  " << pairs[i]  << "    " << 7 * days[i] + pairs[i]  << "exepts =   " << exepts[i] <<std::endl;
+    }
+    for(size_t i = 0; i < len/2; i++){
+        if(tempgroup.lesson_map[exepts[i]].exist == 1){
+            loss += 100;
+        }
+        tempgroup.lesson_map[exepts[i]].print();
+       std::cout << tempgroup.lesson_map[exepts[i]].exist <<std::endl;
+    }
+    for(size_t i = 0; i < len/2; i++){
+       std::cout << exepts[i] <<std::endl;
+    }
+
+    //cout << sum <<std::endl;
+
+    return loss;
 }
 
 
