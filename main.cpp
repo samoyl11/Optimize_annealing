@@ -16,8 +16,8 @@
 #include <set>
 #include <cstdlib>
 #include <ctime>
-//const std::string path_to_dir = "/Users/alexander/My_pandas/";
-const std::string path_to_dir = "tt/static/Schedules/";
+const std::string path_to_dir = "/Users/alexander/My_pandas/";
+//const std::string path_to_dir = "tt/static/Schedules/";
 const std::string path_to_rawdata = "departments_2/";
 const std::string path_to_preps = "data_hashed.csv";
 
@@ -74,7 +74,7 @@ public:
 
     double loss(Group tempgroup){
         double loss = 0;
-        //tempgroup.print();
+        //tempgroup.();
         //cout << tempgroup.lesson_map[0].prep_list[1].social;
         //double a = number_of_windows_weight * number_of_windows(tempgroup);
         //double b = ratings(tempgroup, ratings_knowledge,  ratings_skill,  ratings_social,  ratings_loyality,  ratings_total);
@@ -114,10 +114,10 @@ public:
                     min = score;
                 }
             std::cout << "SCORE: " << score << std::endl;*/
-            //tempgroup.print();
+            //tempgroup.();
         //}
 
-        //best.print();
+        //best.();
         //std::cout << "BEST SCORE = " << min << std::endl;
         old_energy = loss(grade.group_map[group]);
         std::cout << "INIT_OLD_ENERGY" << old_energy << std::endl;
@@ -134,7 +134,6 @@ public:
             std::cout << "############################### CURRENT ENERGY            (OLD ENERGY) ###############################        " << old_energy << std::endl;*/
             step();
         }
-        current_group.print();
         double a = loss(current_group);
         //std::cout << "FINAL ENERGY " << a << std::endl;
         //std::cout << "FINISHED STEPS" << std::endl;
@@ -663,33 +662,24 @@ double time_of_study(Group tempgroup, int which1, int which2, int input1, int in
 
 double exeption_of_pairs(Group tempgroup, std::string pair_id){
     double loss = 0;
-    std::cout << "string:  " << pair_id <<std::endl;
     //const char *s_numbers = "1343245";
     size_t len = pair_id.size();
-   std::cout << "len =   " << len <<std::endl;
     int days[len/2];
     int pairs[len/2];
     int s = 0;
     for(size_t i = 0; i < len; i += 2){
         days[s] = pair_id[i] - 48;
         pairs[s] = pair_id[i + 1] - 48;
-       std::cout << "  days:   "<< days[s] << "    pairs:  " << pairs[s]  << "    " << 7 * days[s] + pairs[s] <<std::endl;
         s++;
     }
     int exepts[len/2];
     for(size_t i = 0; i < len/2; i++){
         exepts[i] = 7 * days[i] + pairs[i];
-       std::cout << "  days:   "<< days[i] << "    pairs:  " << pairs[i]  << "    " << 7 * days[i] + pairs[i]  << "exepts =   " << exepts[i] <<std::endl;
     }
     for(size_t i = 0; i < len/2; i++){
         if(tempgroup.lesson_map[exepts[i]].exist == 1){
             loss += 100;
         }
-        tempgroup.lesson_map[exepts[i]].print();
-       std::cout << tempgroup.lesson_map[exepts[i]].exist <<std::endl;
-    }
-    for(size_t i = 0; i < len/2; i++){
-       std::cout << exepts[i] <<std::endl;
     }
 
     //cout << sum <<std::endl;
